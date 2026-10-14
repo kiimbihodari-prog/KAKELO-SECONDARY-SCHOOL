@@ -1,0 +1,202 @@
+
+/* =========================================
+   KAKelo SECONDARY - WEBSITE INTERACTIONS
+   ========================================= */
+
+// MOBILE NAVIGATION
+const menuToggle = document.getElementById("menuToggle");
+const navigation = document.getElementById("navigation");
+
+menuToggle.addEventListener("click", () => {
+  const isOpen = navigation.classList.toggle("open");
+
+  menuToggle.textContent = isOpen ? "✕" : "☰";
+  menuToggle.setAttribute("aria-expanded", String(isOpen));
+  menuToggle.setAttribute(
+    "aria-label",
+    isOpen ? "Close navigation menu" : "Open navigation menu"
+  );
+});
+
+// Close the mobile menu when a navigation link is clicked.
+navigation.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    navigation.classList.remove("open");
+    menuToggle.textContent = "☰";
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.setAttribute("aria-label", "Open navigation menu");
+  });
+});
+
+// FOOTER YEAR
+document.getElementById("year").textContent =
+  new Date().getFullYear();
+
+// DEMONSTRATION STUDENT LOGIN
+const loginForm = document.getElementById("loginForm");
+const loginMessage = document.getElementById("loginMessage");
+
+loginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const fullName = document.getElementById("fullName").value.trim();
+  const admission = document.getElementById("admission").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  if (!fullName || !admission || !phone) {
+    loginMessage.textContent = "Please complete all the fields.";
+    loginMessage.style.color = "#c62828";
+    return;
+  }
+
+  loginMessage.textContent =
+    `Welcome, ${fullName}! Your demonstration login is complete.`;
+
+  loginMessage.style.color = "#16814d";
+
+  // This is only a demonstration.
+  // No student account is verified or created.
+  // No details are sent to a server or saved.
+});
+
+// PHOTO SLIDESHOW
+// These online sample photos work without downloading files.
+// Replace the URLs with your own local images when ready.
+
+const slides = [
+    {
+        image: "images (1).jpg",
+        caption: "Our school",
+        number: "1 / 4"
+    },
+    {
+        image: "studentsz.png",
+        caption: "Students possing for a photo",
+        number: "2 / 4"
+    },
+    {
+        image: "computer lab .jpg.jpg",
+        caption: "Computer laboratory",
+        number: "3 / 4"
+    },
+    {
+        image: "library.jpg.png",
+        caption: "School library",
+        number: "4 / 4"
+    }
+];
+
+const slideImage = document.getElementById("slideImage");
+const slideCaption = document.getElementById("slideCaption");
+const slideNumber = document.getElementById("slideNumber");
+const slideDots = document.getElementById("slideDots");
+const prevSlide = document.getElementById("prevSlide");
+const nextSlide = document.getElementById("nextSlide");
+const slideshow = document.querySelector(".slideshow");
+
+let currentSlide = 0;
+let slideshowTimer;
+let touchStartX = 0;
+
+// Build the navigation dots.
+slides.forEach((slide, index) => {
+  const dot = document.createElement("button");
+
+  dot.className = "slide-dot";
+  dot.type = "button";
+  dot.setAttribute("aria-label", `Show photo ${index + 1}`);
+
+  dot.addEventListener("click", () => {
+    showSlide(index);
+    restartSlideshow();
+  });
+
+  slideDots.appendChild(dot);
+});
+
+function showSlide(index) {
+  currentSlide = (index + slides.length) % slides.length;
+
+  const slide = slides[currentSlide];
+
+  slideImage.style.opacity = "0";
+
+  window.setTimeout(() => {
+    slideImage.src = slide.image;
+    slideImage.alt = slide.alt;
+    slideCaption.textContent = slide.caption;
+    slideNumber.textContent = `Photo ${currentSlide + 1}`;
+
+    slideImage.onload = () => {
+      slideImage.style.opacity = "1";
+    };
+
+    // Restore visibility if an image fails to load.
+    slideImage.onerror = () => {
+      slideImage.style.opacity = "1";
+      slideCaption.textContent =
+        "Please check your photo URL or internet connection.";
+    };
+
+    // Cached images may already be loaded.
+    if (slideImage.complete && slideImage.naturalWidth > 0) {
+      slideImage.style.opacity = "1";
+    }
+  }, 180);
+
+  document.querySelectorAll(".slide-dot").forEach((dot, dotIndex) => {
+    dot.classList.toggle("active", dotIndex === currentSlide);
+    dot.setAttribute(
+      "aria-current",
+      dotIndex === currentSlide ? "true" : "false"
+    );
+  });
+}
+
+function startSlideshow() {
+  window.clearInterval(slideshowTimer);
+
+  slideshowTimer = window.setInterval(() => {
+    showSlide(currentSlide + 1);
+  }, 4000);
+}
+
+function restartSlideshow() {
+  startSlideshow();
+}
+
+prevSlide.addEventListener("click", () => {
+  showSlide(currentSlide - 1);
+  restartSlideshow();
+});
+
+nextSlide.addEventListener("click", () => {
+  showSlide(currentSlide + 1);
+  restartSlideshow();
+});
+
+// Pause automatic changes while the mouse is over the slideshow.
+slideshow.addEventListener("mouseenter", () => {
+  window.clearInterval(slideshowTimer);
+});
+
+slideshow.addEventListener("mouseleave", startSlideshow);
+
+// Support swiping between photos on phones.
+slideshow.addEventListener("touchstart", (event) => {
+  touchStartX = event.changedTouches[0].screenX;
+}, { passive: true });
+
+slideshow.addEventListener("touchend", (event) => {
+  const touchEndX = event.changedTouches[0].screenX;
+  const distance = touchEndX - touchStartX;
+
+  if (Math.abs(distance) > 50) {
+    showSlide(currentSlide + (distance < 0 ? 1 : -1));
+    restartSlideshow();
+  }
+}, { passive: true });
+
+// Display the first photo and begin automatic rotation.
+showSlide(0);
+startSlideshow();
